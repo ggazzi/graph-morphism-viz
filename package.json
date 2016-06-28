@@ -1,0 +1,14 @@
+{
+  "name": "graph-morphism-viz",
+  "version": "0.1.0",
+  "description": "A tool for creating and visualizing typed graphs and morphisms.",
+  "author": "Guilherme G. Azzi",
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {},
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"No tests\"",
+    "prepublish": "tsc src/*.ts --outDir dist/ --noEmitOnError --sourceMap"
+  }
+}
