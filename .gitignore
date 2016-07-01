@@ -1,4 +1,7 @@
 dist/
+build/
+
+.DS_Store
 
 # Logs
 logs

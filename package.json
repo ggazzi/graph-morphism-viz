@@ -6,9 +6,17 @@
   "license": "UNLICENSED",
   "private": true,
   "dependencies": {},
-  "devDependencies": {},
+  "devDependencies": {
+    "browserify": "^13.0.1",
+    "typescript": "^2.0.0-dev.20160629",
+    "watchify": "^3.7.0"
+  },
   "scripts": {
     "test": "echo \"No tests\"",
-    "prepublish": "tsc src/*.ts --outDir dist/ --noEmitOnError --sourceMap"
+    "build:tsc": "tsc -p .",
+    "build:browserify": "browserify --debug --outfile=dist/app.bundle.js --entry=build/app.js",
+    "build": "npm run build:tsc && npm run build:browserify",
+    "build:watch": "watchify --debug --outfile=dist/app.bundle.js --entry=build/app.js",
+    "prepublish": "rm dist/*; npm run build"
   }
 }
