@@ -1,152 +1,10 @@
-import {Model} from './model';
-import {Point, Vector} from './geometry';
 import {Graph, TypeGraph} from './graph';
-
 import {GraphLayouter} from './graph-layout';
+
+import * as GraphView from './graph-view';
 import * as Form from './forms';
 
-
-function showGraph(container: d3.Selection<SVGElement, {}, Element, any>, arrowhead: Arrowhead, config: Model, graph: Graph) {
-  const width  = +container.attr('width'),
-        height = +container.attr('height');
-  const layouter = new GraphLayouter(config, graph, width, height);
-
-  const edgeElems = makeEdgeElems();
-  const nodeElems = makeNodeElems(layouter);
-
-  layouter.simulation.on('tick', updateView);
-
-  function makeNodeElems(layouter: GraphLayouter) : d3.Selection<Element, Graph.Node, Element, {}> {
-    const nodeElems = container.append('g')
-        .attr('class', 'nodes')
-      .selectAll('.node')
-        .data(d3.values(graph.nodes))
-      .enter().append('g')
-        .attr('class', 'node')
-        .call(dragNodes(config, layouter, updateView))
-        .on('dblclick', node => {
-          node.pinned = !node.pinned
-        });
-
-    nodeElems.each(drawNode);
-
-    return nodeElems;
-  }
-
-  function updateView() {
-    updateNodes(nodeElems);
-    updateEdges(edgeElems, arrowhead);
-  }
-
-  function makeEdgeElems() : d3.Selection<Element, Graph.Edge, Element, {}> {
-    const edgeElems = container.append('g')
-        .attr('class', 'edges')
-      .selectAll('.edge')
-        .data(d3.values(graph.edges))
-      .enter().append('g')
-        .attr('class', 'edge');
-
-    edgeElems.append('path')
-        .attr('class', '')
-        .attr('marker-end', `url('#${arrowhead.markerId}')`);
-
-    edgeElems.append('text')
-        .text(edge => edge.type.name);
-
-    return edgeElems;
-  }
-}
-
-function drawNode(node: Graph.Node) {
-  d3.select(this)
-      .html(node.type.icon || `<circle r="${node.type.radius}"/>`)
-    .append('circle')
-      .attr('class', 'outline')
-      .attr('r', node.type.radius);
-}
-
-function updateNodes(nodeElems: d3.Selection<Element, Graph.Node, Element, {}>) {
-  nodeElems.attr('transform', node => `translate(${node.x}, ${node.y})`);
-}
-
-function updateEdges(edgeElems: d3.Selection<Element, Graph.Edge, Element, {}>, arrowhead: Arrowhead) {
-  edgeElems.select('path').attr('d', edge => {
-    const delta = edge.target.point.distanceFrom(edge.source.point);
-    const norm = delta.scaleBy(1/delta.norm);
-
-    const sourcePadding = edge.source.type.radius + 3, // border width
-          targetPadding = edge.target.type.radius + .6 * arrowhead.edgePadding + 3; // border width
-
-    const source = edge.source.point.add(norm.scaleBy(sourcePadding));
-    const target = edge.target.point.sub(norm.scaleBy(targetPadding));
-
-    return `M${source.x},${source.y} L${target.x},${target.y}`;
-  });
-
-  edgeElems.select('text')
-      .each(function (edge) {
-        const text: SVGLocatable = <any>this;
-        const bbox = text.getBBox();
-        edge.labelSize.width = bbox.width;
-        edge.labelSize.height = bbox.height;
-      })
-      .attr('transform', edge => {
-        const location = edge.labelPos;
-        return `translate(${location.x},${location.y})`;
-      });
-}
-
-function dragNodes(config: Model, layouter: GraphLayouter, dragCallback) : d3.DragBehavior<Element, Graph.Node> {
-  return d3.drag<Element, Graph.Node>()
-    .on('start', node => {
-      if (!dragEvent().active) layouter.restart().simulation.alphaTarget(0.3);
-      node.dragging = true;
-    })
-    .on('drag', node => {
-      node.x = dragEvent().x;
-      node.y = dragEvent().y;
-      dragCallback();
-    })
-    .on('end', node => {
-      if (!dragEvent().active) layouter.simulation.alphaTarget(0);
-      node.dragging = false;
-    });
-}
-
-function dragEvent<GElement extends Element, Datum>() : d3.D3DragEvent<GElement, Datum> {
-  return <any>d3.event;
-}
-
-const MARKER_REFX_MULT = 0.6;
-
-class Arrowhead {
-  private marker: d3.Selection<SVGMarkerElement, {}, Element, {}>;
-  private size: {width: number, height: number};
-
-  get width(): number { return this.size.width; }
-  get height(): number { return this.size.height; }
-  get markerId(): string { return this.marker.attr('id'); }
-
-  get edgePadding(): number { return this.size.width * (1 - MARKER_REFX_MULT)}
-
-  constructor(width, height, defs: d3.Selection<SVGDefsElement, {}, Element, {}>) {
-    this.size = {width, height};
-
-    this.marker = <any>defs.append('marker')
-      .attr('id', 'arrowhead')
-      .attr('viewBox', '0 -5 10 10')
-      .attr('refX', MARKER_REFX_MULT * 10)
-      .attr('markerWidth', width)
-      .attr('markerHeight', height)
-      .attr('orient', 'auto');
-
-    this.marker.append('svg:path')
-      .attr('d', `M0,${-height/2} L${width},0 L0,${height/2}`)
-      .attr('stroke-width', 0);
-  }
-}
-
-function controlConfig<T>(config: Model) {
+function controlConfig(config: GraphLayouter.Configuration) {
   const configForm = d3.select('form[name="config"]');
 
   Form.addCheckbox(configForm, config, 'layouterOn', 'Automatic Layout');
@@ -176,14 +34,13 @@ function controlConfig<T>(config: Model) {
 
 (<any>window).app = {
   run() {
-    const svgCanvas: d3.Selection<SVGElement, {}, SVGElement, {}> = <any>d3.select('#canvas');
-    const defs: d3.Selection<SVGDefsElement, {}, SVGElement, {}> = <any>svgCanvas.append('defs');
+    const svgCanvas = d3.select('#canvas');
 
-    const arrowhead = new Arrowhead(8, 8, defs);
     const config = new GraphLayouter.Configuration();
     controlConfig(config);
 
-    showGraph(svgCanvas, arrowhead, config, graph);
+    const arrowhead = new GraphView.Arrowhead(8, 8, <any>svgCanvas.append('defs'));
+    GraphView.showGraph(svgCanvas, graph, arrowhead, config);
   }
 }
 
