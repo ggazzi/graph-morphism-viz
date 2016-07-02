@@ -6,6 +6,7 @@
     "target": "es5",
     "module": "commonjs",
     "moduleResolution": "node",
+    "noImplicitAny": true,
 
     "removeComments": true,
     "sourceMap": false
@@ -16,7 +17,7 @@
     "typings/browser.d.ts"
   ],
   "compileOnSave": true,
-  "buildOnSave": false,
+  "buildOnSave": true,
   "atom": {
     "rewriteTsconfig": false
   }
