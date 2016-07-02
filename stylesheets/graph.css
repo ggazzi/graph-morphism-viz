@@ -17,9 +17,16 @@
 }
 
 .graph .edge {
+  fill: #CCC;
+}
+
+.graph .edge path {
   stroke-width: 2;
   stroke: #CCC;
-  fill: #CCC;
+}
+
+.graph .edge text {
+  text-anchor: middle;
 }
 
 .graph .labelAnchor text {

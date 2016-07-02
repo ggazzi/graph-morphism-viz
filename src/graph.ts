@@ -1,3 +1,5 @@
+import {Point, Vector} from './geometry';
+
 type StringMap<V> = {[key:string]: V};
 
 export class TypeGraph {
@@ -92,6 +94,8 @@ export namespace Graph {
     dragging: boolean;
     pinned: boolean;
 
+    get point(): Point { return new Point(this.x, this.y); }
+
     /** Creates a node from the given stub, on the given context.
      *
      * If the type doesn't exist, throw an error.
@@ -127,6 +131,44 @@ export namespace Graph {
     source: Node;
     target: Node;
 
+    get center(): Point {
+      return new Point(
+        (this.source.x + this.target.x)/2,
+        (this.source.y + this.target.y)/2
+      );
+    }
+
+    /** Displacement in [0,1] of the label along the direction of the edge.
+     *
+     * A displacement of 0 means the label is on the source, of 1 on the target.
+     */
+    labelDisp: number;
+    labelSize: {width: number, height: number};
+
+    get labelPos(): Point {
+      const displacement = this.target.point
+        .distanceFrom(this.source.point)
+        .scaleBy(this.labelDisp);
+
+      const displacementFromEdge = displacement.orthogonal
+        .scaleBy(3/displacement.norm);
+
+      const halfWidth = this.labelSize.width/2;
+      const halfHeight = this.labelSize.height/2;
+
+      if (displacement.dx * displacement.dy >= 0) {
+        displacement.dx += halfWidth;
+        displacement.dy -= halfHeight + 3;
+      } else {
+        displacement.dx += halfWidth;
+        displacement.dy += halfHeight;
+      }
+
+      displacement.dy += halfHeight;
+
+      return this.source.point.add(displacement)//.add(displacementFromEdge);
+    }
+
     /** Creates an edge from the given stub, in the given context.
      *
      * If the source, target or type don't exist, throw an error.
@@ -134,6 +176,8 @@ export namespace Graph {
      */
     constructor(types: TypeGraph, nodes: StringMap<Node>, stub: EdgeStub) {
       this.id = stub.id;
+      this.labelDisp = 0.5;
+      this.labelSize = {width: 0, height: 0};
       this.type = types.edges[stub.type];
       if (typeof this.type === 'undefined') {
         throw Error(`Graph::Node::constructor: unknown edge type '${stub.type}' for edge '${stub.id}'`);
@@ -162,6 +206,12 @@ export namespace Graph {
     source: string;
     target: string;
   }
+}
+
+interface Label {
+  displacement: Vector;
+  width: number;
+  height: number;
 }
 
 function assembleNodeTypes(nodeTypes: NodeType[]): StringMap<NodeType> {

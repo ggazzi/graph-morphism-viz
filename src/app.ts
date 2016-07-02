@@ -1,4 +1,5 @@
 import {Model} from './model';
+import {Point, Vector} from './geometry';
 import {Graph, TypeGraph} from './graph';
 import * as Form from './forms';
 
@@ -14,7 +15,7 @@ function makeLayoutConfig() : Model {
   return config;
 }
 
-function createSimulation(config: Model, graph: Graph, width: number, height: number) : d3.Simulation<Graph.Node> {
+function createNodesSimulation(config: Model, graph: Graph, width: number, height: number) : d3.Simulation<Graph.Node> {
   const simulation = d3.forceSimulation<Graph.Node>(valuesOf(graph.nodes));
 
   const gravityX = d3.forceX<Graph.Node>(width/2).strength(config.get<number>('gravityStrength'));
@@ -68,18 +69,18 @@ function createSimulation(config: Model, graph: Graph, width: number, height: nu
 function showGraph(container: d3.Selection<SVGElement, {}, Element, any>, arrowhead: Arrowhead, config: Model, graph: Graph) {
   const width  = +container.attr('width'),
         height = +container.attr('height');
-  const simulation = createSimulation(config, graph, width, height);
+  const nodesSimulation = createNodesSimulation(config, graph, width, height);
 
   const edgeElems = makeEdgeElems();
-  const nodeElems = makeNodeElems(simulation);
+  const nodeElems = makeNodeElems(nodesSimulation);
 
-  simulation.nodes(valuesOf(graph.nodes))
+  nodesSimulation.nodes(valuesOf(graph.nodes))
     .force('collision',
       d3.forceCollide<Graph.Node>(n => n.type.radius))
     .force('center',
       d3.forceCenter(width/2, height/2));
 
-  simulation.on('tick', updateView)
+  nodesSimulation.on('tick', updateView);
 
   function makeNodeElems(simulation: d3.Simulation<Graph.Node>) : d3.Selection<Element, Graph.Node, Element, {}> {
     const nodeElems = container.append('g')
@@ -108,9 +109,15 @@ function showGraph(container: d3.Selection<SVGElement, {}, Element, any>, arrowh
         .attr('class', 'edges')
       .selectAll('.edge')
         .data(valuesOf(graph.edges))
-      .enter().append('path')
-        .attr('class', 'edge')
+      .enter().append('g')
+        .attr('class', 'edge');
+
+    edgeElems.append('path')
+        .attr('class', '')
         .attr('marker-end', `url('#${arrowhead.markerId}')`);
+
+    edgeElems.append('text')
+        .text(edge => edge.type.name);
 
     return edgeElems;
   }
@@ -129,26 +136,36 @@ function updateNodes(nodeElems: d3.Selection<Element, Graph.Node, Element, {}>) 
 }
 
 function updateEdges(edgeElems: d3.Selection<Element, Graph.Edge, Element, {}>, arrowhead: Arrowhead) {
-  edgeElems.attr('d', d => {
-    const deltaX = d.target.x - d.source.x,
-          deltaY = d.target.y - d.source.y,
-          dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+  edgeElems.select('path').attr('d', edge => {
+    const delta = edge.target.point.distanceFrom(edge.source.point);
+    const norm = delta.scaleBy(1/delta.norm);
 
-    const normX = deltaX / dist,
-          normY = deltaY / dist;
+    const sourcePadding = edge.source.type.radius + 3, // border width
+          targetPadding = edge.target.type.radius + .6 * arrowhead.edgePadding + 3; // border width
 
-    const sourcePadding = d.source.type.radius + 3, // border width
-          targetPadding = d.target.type.radius + .6 * arrowhead.edgePadding + 3; // border width
+    const source = edge.source.point.add(norm.scaleBy(sourcePadding));
+    const target = edge.target.point.sub(norm.scaleBy(targetPadding))
 
-    const sourceX = d.source.x + (sourcePadding * normX),
-          sourceY = d.source.y + (sourcePadding * normY),
-          targetX = d.target.x - (targetPadding * normX),
-          targetY = d.target.y - (targetPadding * normY);
+    const sourceX = edge.source.x + (sourcePadding * norm.dx),
+          sourceY = edge.source.y + (sourcePadding * norm.dy),
+          targetX = edge.target.x - (targetPadding * norm.dx),
+          targetY = edge.target.y - (targetPadding * norm.dy);
 
     return `M${sourceX},${sourceY} L${targetX},${targetY}`;
   });
-}
 
+  edgeElems.select('text')
+      .each(function (edge) {
+        const text: SVGLocatable = <any>this;
+        const bbox = text.getBBox();
+        edge.labelSize.width = bbox.width;
+        edge.labelSize.height = bbox.height;
+      })
+      .attr('transform', edge => {
+        const location = edge.labelPos;
+        return `translate(${location.x},${location.y})`;
+      });
+}
 
 function dragNodes(config: Model, simulation: d3.Simulation<any>, dragCallback) : d3.DragBehavior<Element, Graph.Node> {
   return d3.drag<Element, Graph.Node>()
