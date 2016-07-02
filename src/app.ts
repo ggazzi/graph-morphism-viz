@@ -1,95 +1,29 @@
 import {Model} from './model';
 import {Point, Vector} from './geometry';
 import {Graph, TypeGraph} from './graph';
+
+import {GraphLayouter} from './graph-layout';
 import * as Form from './forms';
 
-function makeLayoutConfig() : Model {
-  const config = new Model({
-    gravityStrength: 1e-2,
-    nodeRepulsionStrength: -120,
-    edgeLength: 100,
-
-    layouterOn: true
-  });
-
-  return config;
-}
-
-function createNodesSimulation(config: Model, graph: Graph, width: number, height: number) : d3.Simulation<Graph.Node> {
-  const simulation = d3.forceSimulation<Graph.Node>(valuesOf(graph.nodes));
-
-  const gravityX = d3.forceX<Graph.Node>(width/2).strength(config.get<number>('gravityStrength'));
-  const gravityY = d3.forceY<Graph.Node>(height/2).strength(config.get<number>('gravityStrength'));
-
-  config.onChange<number>('gravityStrength.sim', strength => {
-    gravityX.strength(strength);
-    gravityY.strength(strength);
-    restartSim();
-  });
-
-  const nodeRepulsion = d3.forceManyBody<Graph.Node>()
-    .strength(config.get<number>('nodeRepulsionStrength'));
-
-  config.onChange<number>('nodeRepulsionStrength.sim', strength => {
-    nodeRepulsion.strength(strength);
-    restartSim();
-  })
-
-  const edgeAttraction = d3.forceLink(valuesOf(graph.edges))
-    .distance(edge => config.get<number>('edgeLength') + edge.source.type.radius + edge.target.type.radius);
-
-  config.onChange<number>('edgeLength.sim', length => {
-    edgeAttraction.distance(edge => length + edge.source.type.radius + edge.target.type.radius);
-    restartSim();
-  })
-
-  config.onChange<boolean>('layouterOn.sim', isActive => {
-    if (isActive) {
-      simulation.alpha(0.2).restart();
-    } else {
-      simulation.stop();
-    }
-  })
-
-  simulation
-    .force('gravityX', <any>gravityX)
-    .force('gravityY', <any>gravityY)
-    .force('nodeRepulsion', <any>nodeRepulsion)
-    .force('edgeAttraction', edgeAttraction);
-
-  return simulation;
-
-  function restartSim() {
-    if (config.get<boolean>('layouterOn')) {
-      simulation.alpha(0.2).restart();
-    }
-  }
-}
 
 function showGraph(container: d3.Selection<SVGElement, {}, Element, any>, arrowhead: Arrowhead, config: Model, graph: Graph) {
   const width  = +container.attr('width'),
         height = +container.attr('height');
-  const nodesSimulation = createNodesSimulation(config, graph, width, height);
+  const layouter = new GraphLayouter(config, graph, width, height);
 
   const edgeElems = makeEdgeElems();
-  const nodeElems = makeNodeElems(nodesSimulation);
+  const nodeElems = makeNodeElems(layouter);
 
-  nodesSimulation.nodes(valuesOf(graph.nodes))
-    .force('collision',
-      d3.forceCollide<Graph.Node>(n => n.type.radius))
-    .force('center',
-      d3.forceCenter(width/2, height/2));
+  layouter.simulation.on('tick', updateView);
 
-  nodesSimulation.on('tick', updateView);
-
-  function makeNodeElems(simulation: d3.Simulation<Graph.Node>) : d3.Selection<Element, Graph.Node, Element, {}> {
+  function makeNodeElems(layouter: GraphLayouter) : d3.Selection<Element, Graph.Node, Element, {}> {
     const nodeElems = container.append('g')
         .attr('class', 'nodes')
       .selectAll('.node')
-        .data(valuesOf(graph.nodes))
+        .data(d3.values(graph.nodes))
       .enter().append('g')
         .attr('class', 'node')
-        .call(dragNodes(config, simulation, updateView))
+        .call(dragNodes(config, layouter, updateView))
         .on('dblclick', node => {
           node.pinned = !node.pinned
         });
@@ -108,7 +42,7 @@ function showGraph(container: d3.Selection<SVGElement, {}, Element, any>, arrowh
     const edgeElems = container.append('g')
         .attr('class', 'edges')
       .selectAll('.edge')
-        .data(valuesOf(graph.edges))
+        .data(d3.values(graph.edges))
       .enter().append('g')
         .attr('class', 'edge');
 
@@ -144,14 +78,9 @@ function updateEdges(edgeElems: d3.Selection<Element, Graph.Edge, Element, {}>, 
           targetPadding = edge.target.type.radius + .6 * arrowhead.edgePadding + 3; // border width
 
     const source = edge.source.point.add(norm.scaleBy(sourcePadding));
-    const target = edge.target.point.sub(norm.scaleBy(targetPadding))
+    const target = edge.target.point.sub(norm.scaleBy(targetPadding));
 
-    const sourceX = edge.source.x + (sourcePadding * norm.dx),
-          sourceY = edge.source.y + (sourcePadding * norm.dy),
-          targetX = edge.target.x - (targetPadding * norm.dx),
-          targetY = edge.target.y - (targetPadding * norm.dy);
-
-    return `M${sourceX},${sourceY} L${targetX},${targetY}`;
+    return `M${source.x},${source.y} L${target.x},${target.y}`;
   });
 
   edgeElems.select('text')
@@ -167,12 +96,10 @@ function updateEdges(edgeElems: d3.Selection<Element, Graph.Edge, Element, {}>, 
       });
 }
 
-function dragNodes(config: Model, simulation: d3.Simulation<any>, dragCallback) : d3.DragBehavior<Element, Graph.Node> {
+function dragNodes(config: Model, layouter: GraphLayouter, dragCallback) : d3.DragBehavior<Element, Graph.Node> {
   return d3.drag<Element, Graph.Node>()
     .on('start', node => {
-      if (!dragEvent().active && config.get<boolean>('layouterOn')) {
-        simulation.alphaTarget(0.3).restart();
-      }
+      if (!dragEvent().active) layouter.restart().simulation.alphaTarget(0.3);
       node.dragging = true;
     })
     .on('drag', node => {
@@ -181,7 +108,7 @@ function dragNodes(config: Model, simulation: d3.Simulation<any>, dragCallback) 
       dragCallback();
     })
     .on('end', node => {
-      if (!dragEvent().active) simulation.alphaTarget(0);
+      if (!dragEvent().active) layouter.simulation.alphaTarget(0);
       node.dragging = false;
     });
 }
@@ -247,23 +174,13 @@ function controlConfig<T>(config: Model) {
   )
 }
 
-function valuesOf<T>(object: {[key:string]:T}) : T[] {
-  const result: T[] = [];
-
-  for (const key in object) {
-    result.push(object[key]);
-  }
-
-  return result;
-}
-
 (<any>window).app = {
   run() {
     const svgCanvas: d3.Selection<SVGElement, {}, SVGElement, {}> = <any>d3.select('#canvas');
     const defs: d3.Selection<SVGDefsElement, {}, SVGElement, {}> = <any>svgCanvas.append('defs');
 
     const arrowhead = new Arrowhead(8, 8, defs);
-    const config = makeLayoutConfig();
+    const config = new GraphLayouter.Configuration();
     controlConfig(config);
 
     showGraph(svgCanvas, arrowhead, config, graph);
