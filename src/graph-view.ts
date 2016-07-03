@@ -54,12 +54,19 @@ class NodesView {
         .append('circle')
           .attr('class', 'outline')
           .attr('r', node.type.radius);
+      d3.select(this)
+        .append('text')
+          .attr('class', 'node__pin-indicator')
+          .attr('transform', 'translate(10,20)')
+          .text('x')
     });
   }
 
   /** Update the visualization of the nodes. */
   refresh() {
-    this.nodesGroup.attr('transform', node => `translate(${node.x}, ${node.y})`);
+    this.nodesGroup
+        .attr('transform', node => `translate(${node.x}, ${node.y})`)
+        .attr('class', node => node.pinned ? 'node node--pinned' : 'node');
   }
 }
 

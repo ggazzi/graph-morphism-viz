@@ -16,6 +16,17 @@
   stroke-width: 3;
 }
 
+.graph .node__pin-indicator {
+  stroke: transparent;
+  fill: transparent;
+}
+
+.graph .node--pinned .node__pin-indicator {
+  stroke-width: 1;
+  stroke: black;
+  fill: darkgrey;
+}
+
 .graph .edge {
   fill: #CCC;
 }
