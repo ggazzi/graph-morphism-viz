@@ -2,6 +2,8 @@ import {Model} from './model';
 import {Point, Vector} from './geometry';
 import {Graph} from './graph';
 
+let instanceCount = 0;
+
 export class GraphLayouter {
   private _config: GraphLayouter.Configuration;
   private _simulation: d3.Simulation<Graph.Node>
@@ -19,9 +21,11 @@ export class GraphLayouter {
   }
 
   constructor(config: GraphLayouter.Configuration, graph: Graph, width: number, height: number) {
+    instanceCount++;
     this._config = config;
 
-    function restartSim() { this.restart(); }
+    const restartSim = () => this.restart();
+
     const [gravityX, gravityY] = makeGravity(config, width, height, restartSim);
     const nodeRepulsion = makeNodeRepulsion(config, restartSim);
     const nodeCollision = makeNodeCollision();
@@ -36,7 +40,7 @@ export class GraphLayouter {
       .force('edgeAttraction', edgeAttraction)
       .force('centering', centeringForce);
 
-    config.onChange<boolean>('layouterOn.sim', layouterOn => {
+    config.onChange<boolean>(`layouterOn.graphLayouter${instanceCount}`, layouterOn => {
       if (layouterOn) simulation.alpha(0.2).restart();
       else simulation.stop();
     })
@@ -68,7 +72,7 @@ function makeGravity(config: GraphLayouter.Configuration, width: number, height:
   const gravityY = d3.forceY<Graph.Node>(height/2)
     .strength(config.get<number>('gravityStrength'));
 
-  config.onChange<number>('gravityStrength.sim', strength => {
+  config.onChange<number>(`gravityStrength.graphLayouter${instanceCount}`, strength => {
     gravityX.strength(strength);
     gravityY.strength(strength);
     onChange();
@@ -83,7 +87,7 @@ function makeNodeRepulsion(config: GraphLayouter.Configuration, onChange: () => 
   const nodeRepulsion = d3.forceManyBody<Graph.Node>()
     .strength(config.get<number>('nodeRepulsionStrength'));
 
-  config.onChange<number>('nodeRepulsionStrength.sim', strength => {
+  config.onChange<number>(`nodeRepulsionStrength.graphLayouter${instanceCount}`, strength => {
     nodeRepulsion.strength(strength);
     onChange();
   })
@@ -101,7 +105,7 @@ function makeEdgeAttraction(config: GraphLayouter.Configuration, edges: Graph.Ed
   const edgeAttraction = d3.forceLink(edges)
     .distance(edge => config.get<number>('edgeLength') + edge.source.type.radius + edge.target.type.radius);
 
-  config.onChange<number>('edgeLength.sim', length => {
+  config.onChange<number>(`edgeLength.graphLayouter${instanceCount}`, length => {
     edgeAttraction.distance(edge => length + edge.source.type.radius + edge.target.type.radius);
     onChange();
   })

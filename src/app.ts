@@ -40,8 +40,14 @@ function controlConfig(config: GraphLayouter.Configuration) {
     controlConfig(config);
 
     const arrowhead = new GraphView.Arrowhead(8, 8, <any>svgCanvas.append('defs'));
-    GraphView.showGraph(svgCanvas, graph, arrowhead, config);
+
+    GraphView.showGraph(d3.select('#graph1'), graph1, arrowhead, config);
+    GraphView.showGraph(d3.select('#graph2'), graph2, arrowhead, config);
   }
+}
+
+function showGraph(container: d3.Selection<Element, {}, Element, {}>, config: GraphLayouter.Configuration, graph: Graph) {
+
 }
 
 const types = TypeGraph.assemble(
@@ -77,20 +83,37 @@ const types = TypeGraph.assemble(
   ]
 );
 
-const graph = Graph.assemble(types,
+const graph1 = Graph.assemble(types,
   [
     { id: 'el', type: 'elevator', x:94, y:74 },
-    { id: 'f1', type: 'floor', x:273, y:69 },
+    { id: 'f2', type: 'floor', x:273, y:69 },
     { id: 'd', type: 'down', x:81, y:156 },
-    { id: 'f2', type: 'floor', x:310, y:163 },
-    { id: 'f3', type: 'floor', x:90, y:249 },
+    { id: 'f1', type: 'floor', x:310, y:163 },
+    { id: 'f0', type: 'floor', x:90, y:249 },
+    { id: 'r', type: 'request', x:278, y:256 }
+  ],
+  [
+    { id: 105, source: 'el', target: 'f2', type: 'on' },
+    { id: 106, source: 'f1', target: 'f2', type: 'next_up' },
+    { id: 107, source: 'f2', target: 'f0', type: 'higher_than' },
+    { id: 108, source: 'f0', target: 'r', type: 'holds' },
+  ]
+)
+
+const graph2 = Graph.assemble(types,
+  [
+    { id: 'el', type: 'elevator', x:94, y:74 },
+    { id: 'f2', type: 'floor', x:273, y:69 },
+    { id: 'd', type: 'down', x:81, y:156 },
+    { id: 'f1', type: 'floor', x:310, y:163 },
+    { id: 'f0', type: 'floor', x:90, y:249 },
     { id: 'r', type: 'request', x:278, y:256 }
   ],
   [
     { id: 105, source: 'el', target: 'f1', type: 'on' },
-    { id: 106, source: 'f2', target: 'f1', type: 'next_up' },
-    { id: 107, source: 'f1', target: 'f3', type: 'higher_than' },
-    { id: 108, source: 'f3', target: 'r', type: 'holds' },
+    { id: 106, source: 'f1', target: 'f2', type: 'next_up' },
+    { id: 107, source: 'f2', target: 'f0', type: 'higher_than' },
+    { id: 108, source: 'f0', target: 'r', type: 'holds' },
   ]
 )
 

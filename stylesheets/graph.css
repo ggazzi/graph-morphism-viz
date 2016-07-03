@@ -4,6 +4,15 @@
   padding: 10px;
 }
 
+.graph__outline {
+  rx: 10;
+  ry: 10;
+  stroke: darkgrey;
+  stroke-width: 3;
+  fill: transparent;
+  padding: 10px;
+}
+
 .graph .node circle {
   fill: #555;
   stroke: #FFF;
