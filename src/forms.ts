@@ -17,7 +17,7 @@ export function addCheckbox(form: d3.Selection<Element, any, Element, any>, mode
   model.onChange<boolean>(`${key}.view`, value => input.property('checked', value));
 }
 
-export function addSlider(form: d3.Selection<Element, any, Element, any>, model: Model, key: string, caption: string, format: (number) => string, scale: d3.ScaleNumeric<number>) {
+export function addSlider(form: d3.Selection<Element, any, Element, any>, model: Model, key: string, caption: string, format: (n: number) => string, scale: d3.ScaleNumeric<number>) {
   const p = form.append('p').attr('class', 'form-line form-line--slider');
   const initValue = model.get<number>(key);
 

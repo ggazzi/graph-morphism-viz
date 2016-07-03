@@ -1,5 +1,5 @@
 export class Model {
-  private dispatch: d3.Dispatch<null>
+  private dispatch: d3.Dispatch<any>
   private values: {[key:string]: any}
 
   constructor(initialModel: {[key:string]: any}) {

@@ -46,7 +46,7 @@ export interface DragBehavior<GElement extends BaseType, Datum> extends Function
     subject(): (this: GElement, datum: Datum, index: number, group: Array<GElement>) => any;
     subject(accessor: (this: GElement, datum: Datum, index: number, group: Array<GElement>) => (Datum | SubjectDatum)): DragBehavior<GElement, Datum>;
     on(typenames: string): (this: GElement, datum: Datum, index: number, group: Array<GElement>) => any;
-    on(typenames: string, callback: null): DragBehavior<GElement, Datum>;
+    // on(typenames: string, callback: null): DragBehavior<GElement, Datum>;
     on(typenames: string, callback: (this: GElement, datum: Datum, index: number, group: Array<GElement>) => any): DragBehavior<GElement, Datum>;
 }
 
@@ -65,7 +65,7 @@ export interface D3DragEvent<GElement extends BaseType, Datum> {
     active: number;
     sourceEvent: MouseEvent | TouchEvent;
     on(typenames: string): (this: GElement, datum: Datum, index: number, group: Array<GElement>) => void;
-    on(typenames: string, callback: null): D3DragEvent<GElement, Datum>;
+    // on(typenames: string, callback: null): D3DragEvent<GElement, Datum>;
     on(typenames: string, callback: (this: GElement, datum: Datum, index: number, group: Array<GElement>) => void): D3DragEvent<GElement, Datum>;
 }
 

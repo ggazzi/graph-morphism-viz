@@ -94,6 +94,6 @@ const graph = Graph.assemble(types,
   ]
 )
 
-function img(width, height, link): string {
+function img(width: number, height: number, link: string): string {
   return `<image xlink:href="${link}" width="${width}" height="${height}" x="-${width/2}" y="-${height/2}"/>`;
 }

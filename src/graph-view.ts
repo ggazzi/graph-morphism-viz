@@ -108,7 +108,7 @@ class EdgesView {
    *  - node border
    *  - arrowhead length
    */
-  private calculatePath(edge) {
+  private calculatePath(edge: Graph.Edge) {
     const delta = edge.target.point.distanceFrom(edge.source.point);
     const norm = delta.scaleBy(1/delta.norm);
 
@@ -121,7 +121,7 @@ class EdgesView {
     return `M${source.x},${source.y} L${target.x},${target.y}`;
   }
 
-  private calculateLabelTransform(edge) {
+  private calculateLabelTransform(edge: Graph.Edge) {
     const location = edge.labelPos;
     return `translate(${location.x},${location.y})`;
   }
@@ -133,7 +133,7 @@ class EdgesView {
   }
 }
 
-function dragNodes(layouter: GraphLayouter, dragCallback) : d3.DragBehavior<Element, Graph.Node> {
+function dragNodes(layouter: GraphLayouter, dragCallback: () => void) : d3.DragBehavior<Element, Graph.Node> {
   return d3.drag<Element, Graph.Node>()
     .on('start', node => {
       if (!dragEvent().active) layouter.restart().simulation.alphaTarget(0.3);
@@ -166,7 +166,7 @@ export class Arrowhead {
 
   get edgePadding(): number { return this.size.width * (1 - MARKER_REFX_MULT)}
 
-  constructor(width, height, defs: d3.Selection<SVGDefsElement, {}, Element, {}>) {
+  constructor(width: number, height: number, defs: d3.Selection<SVGDefsElement, {}, Element, {}>) {
     this.size = {width, height};
 
     this.marker = <any>defs.append('marker')

@@ -215,7 +215,7 @@ interface Label {
 }
 
 function assembleNodeTypes(nodeTypes: NodeType[]): StringMap<NodeType> {
-  const types = {};
+  const types: StringMap<NodeType> = {};
 
   for (const nodeType of nodeTypes) {
     types[nodeType.name] = nodeType;
@@ -225,7 +225,7 @@ function assembleNodeTypes(nodeTypes: NodeType[]): StringMap<NodeType> {
 }
 
 function assembleEdgeTypes(nodeTypes: StringMap<NodeType>, stubs: EdgeTypeStub[]): StringMap<EdgeType> {
-  const types = {};
+  const types: StringMap<EdgeType> = {};
 
   for (const stub of stubs) {
     const signatures = stub.signatures.map<[NodeType, NodeType]>(([src, tgt]) => {
@@ -249,7 +249,7 @@ function assembleEdgeTypes(nodeTypes: StringMap<NodeType>, stubs: EdgeTypeStub[]
 }
 
 function assembleNodes(types: TypeGraph, stubs: Graph.NodeStub[]): StringMap<Graph.Node> {
-  const nodes = {};
+  const nodes: StringMap<Graph.Node> = {};
 
   for (const stub of stubs) {
     nodes[stub.id] = new Graph.Node(types, stub);
@@ -259,7 +259,7 @@ function assembleNodes(types: TypeGraph, stubs: Graph.NodeStub[]): StringMap<Gra
 }
 
 function assembleEdges(types: TypeGraph, nodes: StringMap<Graph.Node>, stubs: Graph.EdgeStub[]): StringMap<Graph.Edge> {
-  const edges = {};
+  const edges: StringMap<Graph.Edge> = {};
 
   for (const stub of stubs) {
     edges[stub.id] = new Graph.Edge(types, nodes, stub);

@@ -42,7 +42,7 @@ export interface Simulation<NodeDatum extends SimulationNodeDatum> {
     force(name: string, force: Force<NodeDatum>): Simulation<NodeDatum>;
     find(x: number, y: number, radius?: number): NodeDatum | undefined;
     on(typenames: 'tick' | 'end' | string): (this: Simulation<NodeDatum>) => void;
-    on(typenames: 'tick' | 'end' | string, listener: null): Simulation<NodeDatum>;
+    // on(typenames: 'tick' | 'end' | string, listener: null): Simulation<NodeDatum>;
     on(typenames: 'tick' | 'end' | string, listener: (this: Simulation<NodeDatum>) => void): Simulation<NodeDatum>;
 }
 
