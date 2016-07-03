@@ -214,6 +214,45 @@ interface Label {
   height: number;
 }
 
+export type GraphMapping = {
+  nodes: StringMap<Graph.Node>,
+  edges: StringMap<Graph.Edge>
+};
+
+export class Morphism {
+  domain: Graph;
+  codomain: Graph;
+  mappingFromDomain: GraphMapping;
+  mappingFromCodomain: GraphMapping;
+
+  private constructor(domain: Graph, codomain: Graph, mappingFromDomain: GraphMapping, mappingFromCodomain: GraphMapping) {
+    this.domain = domain;
+    this.codomain = codomain;
+    this.mappingFromDomain = mappingFromDomain;
+    this.mappingFromCodomain = mappingFromCodomain;
+  }
+
+  static assemble(domain: Graph, codomain: Graph, nodeMapping: [string, string][], edgeMapping: [number, number][]) {
+    const mappingFromDomain: GraphMapping = {nodes: {}, edges: {}};
+    const mappingFromCodomain: GraphMapping = {nodes: {}, edges: {}};
+
+    for (const [n1, n2] of nodeMapping) {
+      mappingFromDomain.nodes[n1] = codomain.nodes[n2];
+      mappingFromCodomain.nodes[n2] = domain.nodes[n1];
+    }
+
+    const edgeMap: StringMap<Graph.Edge> = {};
+    const revEdgeMap: StringMap<Graph.Edge> = {};
+
+    for (const [e1, e2] of edgeMapping) {
+      mappingFromDomain.edges[e1] = codomain.edges[e2];
+      mappingFromCodomain.edges[e2] = domain.edges[e1];
+    }
+
+    return new Morphism(domain, codomain, mappingFromDomain, mappingFromCodomain);
+  }
+}
+
 function assembleNodeTypes(nodeTypes: NodeType[]): StringMap<NodeType> {
   const types: StringMap<NodeType> = {};
 

@@ -1,4 +1,4 @@
-import {Graph, TypeGraph} from './graph';
+import {Graph, TypeGraph, Morphism} from './graph';
 import {GraphLayouter} from './graph-layout';
 
 import * as GraphView from './graph-view';
@@ -8,6 +8,8 @@ function controlConfig(config: GraphLayouter.Configuration) {
   const configForm = d3.select('form[name="config"]');
 
   Form.addCheckbox(configForm, config, 'layouterOn', 'Automatic Layout');
+
+  Form.addCheckbox(configForm, config, 'autoCenter', 'Automatic Centering');
 
   Form.addSlider(configForm, config, 'gravityStrength', 'Gravity',
     d3.format('1.0e'),
@@ -30,6 +32,20 @@ function controlConfig(config: GraphLayouter.Configuration) {
       .domain([0, 200])
       .range([0, 1])
   )
+
+  Form.addSlider(configForm, config, 'edgeStrength', 'Edge Rigidity',
+    d3.format('1.2g'),
+    d3.scaleLinear()
+      .domain([0, 1])
+      .range([0, 1])
+  );
+
+  Form.addSlider(configForm, config, 'mappingConsistency', 'Mapping Consistency',
+    d3.format('1.2g'),
+    d3.scaleLinear()
+      .domain([0, 1])
+      .range([0, 1])
+  );
 }
 
 (<any>window).app = {
@@ -41,8 +57,13 @@ function controlConfig(config: GraphLayouter.Configuration) {
 
     const arrowhead = new GraphView.Arrowhead(8, 8, <any>svgCanvas.append('defs'));
 
-    GraphView.showGraph(d3.select('#graph1'), graph1, arrowhead, config);
-    GraphView.showGraph(d3.select('#graph2'), graph2, arrowhead, config);
+    const layouter1 = GraphView.showGraph(d3.select('#graph1'), graph1, morphism.mappingFromDomain, arrowhead, config, onDrag);
+    const layouter2 = GraphView.showGraph(d3.select('#graph2'), graph2, morphism.mappingFromCodomain, arrowhead, config, onDrag);
+
+    function onDrag() {
+      layouter1.restart();
+      layouter2.restart();
+    }
   }
 }
 
@@ -116,6 +137,22 @@ const graph2 = Graph.assemble(types,
     { id: 108, source: 'f0', target: 'r', type: 'holds' },
   ]
 )
+
+const morphism = Morphism.assemble(graph1, graph2,
+  [
+    ['el', 'el'],
+    ['f0', 'f0'],
+    ['f1', 'f1'],
+    ['f2', 'f2'],
+    ['d', 'd'],
+    ['r', 'r']
+  ],
+  [
+    [106, 106],
+    [107, 107],
+    [108, 108]
+  ]
+);
 
 function img(width: number, height: number, link: string): string {
   return `<image xlink:href="${link}" width="${width}" height="${height}" x="-${width/2}" y="-${height/2}"/>`;

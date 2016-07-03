@@ -1,23 +1,29 @@
 import {Model} from './model';
-import {Graph} from './graph';
+import {Graph, GraphMapping} from './graph';
 import {GraphLayouter} from './graph-layout';
 
 export function showGraph(
       svgElement: d3.Selection<Element, {}, Element, any>,
       graph: Graph,
+      morphism: GraphMapping,
       arrowhead: Arrowhead,
-      config: GraphLayouter.Configuration
-    ) {
+      config: GraphLayouter.Configuration,
+      onDrag: () => void
+    ): GraphLayouter {
 
   const width  = +svgElement.attr('width'),
         height = +svgElement.attr('height');
 
-  const layouter = new GraphLayouter(config, graph, width, height);
+  const layouter = new GraphLayouter(config, graph, morphism, width, height);
 
   const edgesView = new EdgesView(svgElement, d3.values(graph.edges), arrowhead);
-  const nodesView = new NodesView(svgElement, d3.values(graph.nodes), layouter, updateView);
+  const nodesView = new NodesView(svgElement, d3.values(graph.nodes), layouter, () => {
+    updateView();
+    onDrag();
+  });
 
   layouter.simulation.on('tick', updateView);
+  return layouter;
 
   function updateView() {
     nodesView.refresh();
