@@ -43,6 +43,10 @@ export class GraphLayouter {
       .force('morphismX', <any>morphismX)
       .force('morphismY', <any>morphismY);
 
+    for (let i=0; i < 50; i++) {
+      simulation.tick();
+    }
+
     config.onChange<boolean>(`layouterOn.graphLayouter${instanceCount}`, layouterOn => {
       if (layouterOn) simulation.alpha(0.2).restart();
       else simulation.stop();
