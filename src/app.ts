@@ -1,17 +1,20 @@
+import {Model} from './model';
 import {Graph, TypeGraph, Morphism} from './graph';
 import {GraphLayouter} from './graph-layout';
 
 import * as GraphView from './graph-view';
 import * as Form from './forms';
 
-import {morphisms} from './examples';
+import {morphisms, graphs} from './examples';
 
-function controlConfig(config: GraphLayouter.Configuration) {
+function controlConfig(config: GraphLayouter.Configuration, morphism: Model) {
   const configForm = d3.select('form[name="config"]');
 
   Form.addCheckbox(configForm, config, 'layouterOn', 'Automatic Layout');
 
   Form.addCheckbox(configForm, config, 'autoCenter', 'Automatic Centering');
+
+  Form.addDropdown(configForm, morphism, 'morphism', 'Rule', d3.keys(morphisms));
 
   Form.addSlider(configForm, config, 'gravityStrength', 'Gravity',
     d3.format('1.0e'),
@@ -50,25 +53,42 @@ function controlConfig(config: GraphLayouter.Configuration) {
   );
 }
 
-(<any>window).app = {
+const app = (<any>window).app = {
   run() {
+    let firstMorphism = window.location.hash.slice(1) || 'callRequest';
+    if (!(firstMorphism in morphisms)) {
+      firstMorphism = 'callRequest';
+    }
+    window.location.hash = `#${firstMorphism}`;
+
     const svgCanvas = d3.select('#canvas');
+    const morphismModel = new Model({'morphism': firstMorphism});
 
     const config = new GraphLayouter.Configuration();
-    controlConfig(config);
+    controlConfig(config, morphismModel);
 
     const arrowhead = new GraphView.Arrowhead(8, 8, <any>svgCanvas.append('defs'));
 
-    const morphism = morphisms.moveDown;
+    morphismModel.onChange<string>('morphism', name => {
+      window.location.hash = `#${name}`;
+      showMorphism(morphisms[name], arrowhead, config)
+    });
 
-    const layouter1 = GraphView.showGraph(d3.select('#graph1'), morphism.domain, morphism.mappingFromDomain, arrowhead, config, onDrag);
-    const layouter2 = GraphView.showGraph(d3.select('#graph2'), morphism.codomain, morphism.mappingFromCodomain, arrowhead, config, onDrag);
-
-    function onDrag() {
-      layouter1.restart();
-      layouter2.restart();
-    }
+    showMorphism(morphisms[firstMorphism], arrowhead, config);
   },
-  
-  morphisms
+
+  morphisms,
+  currMorphism: morphisms.callRequest
+}
+
+function showMorphism(morphism: Morphism, arrowhead: any, config: any) {
+  app.currMorphism = morphism;
+
+  const layouter1 = GraphView.showGraph(d3.select('#graph1'), morphism.domain, morphism.mappingFromDomain, arrowhead, config, onDrag);
+  const layouter2 = GraphView.showGraph(d3.select('#graph2'), morphism.codomain, morphism.mappingFromCodomain, arrowhead, config, onDrag);
+
+  function onDrag() {
+    layouter1.restart();
+    layouter2.restart();
+  }
 }

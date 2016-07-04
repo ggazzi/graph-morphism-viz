@@ -11,6 +11,9 @@ export function showGraph(
       onDrag: () => void
     ): GraphLayouter {
 
+  svgElement.selectAll('.node, .edge').remove();
+  svgElement.selectAll('.nodes, .edges').remove();
+
   const width  = +svgElement.attr('width'),
         height = +svgElement.attr('height');
 

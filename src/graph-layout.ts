@@ -3,6 +3,7 @@ import {Point, Vector} from './geometry';
 import {Graph, GraphMapping} from './graph';
 
 let instanceCount = 0;
+const INITIAL_ITERATIONS = 1000;
 
 export class GraphLayouter {
   private _config: GraphLayouter.Configuration;
@@ -37,15 +38,24 @@ export class GraphLayouter {
       .nodes(d3.values(graph.nodes))
       .force('gravityX', <any>gravityX)
       .force('gravityY', <any>gravityY)
+      .force('centering', centeringForce)
       .force('nodeRepulsion', <any>nodeRepulsion)
       .force('edgeAttraction', edgeAttraction)
-      .force('centering', centeringForce)
       .force('morphismX', <any>morphismX)
       .force('morphismY', <any>morphismY);
 
-    for (let i=0; i < 50; i++) {
-      simulation.tick();
+    if (!graph.layoutDone) {
+      for (let i=0; i < INITIAL_ITERATIONS; i++) {
+        simulation.tick();
+      }
+      simulation.alpha(0.2).restart();
+      graph.layoutDone = true;
     }
+
+    simulation
+      .force('morphismX', <any>morphismX)
+      .force('morphismY', <any>morphismY)
+      .force('centering', config.get<boolean>('autoCenter') ? centeringForce : null);
 
     config.onChange<boolean>(`layouterOn.graphLayouter${instanceCount}`, layouterOn => {
       if (layouterOn) simulation.alpha(0.2).restart();
@@ -60,8 +70,19 @@ export class GraphLayouter {
     simulation.on(`tick.graphLayouter${instanceCount}`, () => {
       morphismX.x(morphismX.x());
       morphismY.y(morphismY.y())
+
+      for (const node of d3.values(graph.nodes)) {
+        node.x = clamp(0, width, node.x);
+        node.y = clamp(0, height, node.y);
+      }
     })
   }
+}
+
+function clamp(min: number, max: number, val: number) {
+  if (val < min) return min;
+  if (val > max) return max;
+  else return val;
 }
 
 export namespace GraphLayouter {
@@ -69,14 +90,14 @@ export namespace GraphLayouter {
   export class Configuration extends Model {
     constructor() {
       super({
-        gravityStrength: 1e-2,
+        gravityStrength: 2e-2,
         nodeRepulsionStrength: -120,
         edgeLength: 100,
         edgeStrength: 0.2,
         mappingConsistency: 0.3,
 
         layouterOn: true,
-        autoCenter: true,
+        autoCenter: false,
       });
     }
   };
@@ -173,6 +194,7 @@ function makeMorphismForce(morphism: GraphMapping, config: GraphLayouter.Configu
   function makeStrength(strength: number): (n: Graph.Node) => number {
     return n1 => {
       const n2 = morphism.nodes[n1.id];
+
       if (!n2) return 0;
       if (n2.pinned) return Math.min(1, 2*strength);
       else return strength;

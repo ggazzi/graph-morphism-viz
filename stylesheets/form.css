@@ -3,6 +3,7 @@
   display: inline-block;
   width: 15em;
   text-align: right;
+  padding-right: .5em;
 }
 
 .form-line__label::after {

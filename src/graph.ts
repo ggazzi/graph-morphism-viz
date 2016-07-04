@@ -56,6 +56,7 @@ export interface EdgeTypeStub {
 }
 
 export class Graph {
+  layoutDone: boolean
   types: TypeGraph;
   nodes: StringMap<Graph.Node>;
   edges: StringMap<Graph.Edge>;
@@ -84,6 +85,8 @@ export class Graph {
   }
 }
 
+const RANDOM_POSITION = d3.randomUniform(0, 500);
+
 export namespace Graph {
   export class Node {
     id: string;
@@ -108,6 +111,8 @@ export namespace Graph {
       }
 
       [this.x, this.y] = [stub.x, stub.y];
+      this.x = RANDOM_POSITION(0, 500);
+      this.y = RANDOM_POSITION(0, 500);
       this.dragging = this.pinned = false;
     }
 

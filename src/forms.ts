@@ -17,6 +17,26 @@ export function addCheckbox(form: d3.Selection<Element, any, Element, any>, mode
   model.onChange<boolean>(`${key}.view`, value => input.property('checked', value));
 }
 
+export function addDropdown(form: d3.Selection<Element, any, Element, any>, model: Model, key: string, caption: string, options: string[]) {
+  const p = form.append('p').attr('class', 'form-line form-line--dropdown');
+  const initValue = model.get<string>(key);
+
+  addLabel(p, key, caption);
+
+  const select = p.append('select');
+
+  for (const option of options) {
+    select.append('option')
+      .attr('label', option)
+      .attr('value', option)
+      .property('selected', option === initValue)
+  }
+
+  select.on('change', () => {
+    model.set<string>(key, select.property('value'));
+  });
+}
+
 export function addSlider(form: d3.Selection<Element, any, Element, any>, model: Model, key: string, caption: string, format: (n: number) => string, scale: d3.ScaleNumeric<number>) {
   const p = form.append('p').attr('class', 'form-line form-line--slider');
   const initValue = model.get<number>(key);
