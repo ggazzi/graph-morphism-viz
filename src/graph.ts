@@ -85,7 +85,7 @@ export class Graph {
   }
 }
 
-const RANDOM_POSITION = d3.randomUniform(0, 500);
+const RANDOM_POSITION = (<any>d3).randomUniform(0, 500);
 
 export namespace Graph {
   export class Node {

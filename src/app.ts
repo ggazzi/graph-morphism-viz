@@ -75,10 +75,10 @@ const app = (<any>window).app = {
 
     morphismModel.onChange<string>('morphism', name => {
       window.location.hash = `#${name}`;
-      showMorphism(morphisms[name], arrowhead, config)
+      showMorphism((<any>morphisms)[name], arrowhead, config)
     });
 
-    showMorphism(morphisms[firstMorphism], arrowhead, config);
+    showMorphism((<any>morphisms)[firstMorphism], arrowhead, config);
   },
 
   morphisms,
