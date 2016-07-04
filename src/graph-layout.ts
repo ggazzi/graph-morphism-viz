@@ -98,6 +98,8 @@ export namespace GraphLayouter {
 
         layouterOn: true,
         autoCenter: false,
+
+        categoryColors: true,
       });
     }
   };

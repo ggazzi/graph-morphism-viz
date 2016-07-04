@@ -1,15 +1,19 @@
 import {Model} from './model';
-import {Graph, GraphMapping} from './graph';
+import {Graph, GraphMapping, GraphMap} from './graph';
 import {GraphLayouter} from './graph-layout';
 
 export function showGraph(
       svgElement: d3.Selection<Element, {}, Element, any>,
       graph: Graph,
       morphism: GraphMapping,
+      categories: GraphMap<number, number>,
+      colors: d3.ScaleOrdinal<number, any>,
       arrowhead: Arrowhead,
       config: GraphLayouter.Configuration,
       onDrag: () => void
     ): GraphLayouter {
+
+  viewCount++;
 
   svgElement.selectAll('.node, .edge').remove();
   svgElement.selectAll('.nodes, .edges').remove();
@@ -19,8 +23,8 @@ export function showGraph(
 
   const layouter = new GraphLayouter(config, graph, morphism, width, height);
 
-  const edgesView = new EdgesView(svgElement, d3.values(graph.edges), arrowhead);
-  const nodesView = new NodesView(svgElement, d3.values(graph.nodes), layouter, () => {
+  const edgesView = new EdgesView(svgElement, d3.values(graph.edges), arrowhead, layouter.config, categories, colors);
+  const nodesView = new NodesView(svgElement, d3.values(graph.nodes), layouter, categories, colors, () => {
     updateView();
     onDrag();
   });
@@ -36,6 +40,8 @@ export function showGraph(
 
 type D3Selection<Datum> = d3.Selection<Element, Datum, Element, {}>;
 
+let viewCount = 0;
+
 class NodesView {
   private nodesGroup: D3Selection<Graph.Node>
 
@@ -44,7 +50,7 @@ class NodesView {
    * Each node will be represented by an element 'g.node', which
    * contains the node's icon and outline.
    */
-  constructor(container: D3Selection<{}>, nodes: Graph.Node[], layouter: GraphLayouter, onDrag: () => void) {
+  constructor(container: D3Selection<{}>, nodes: Graph.Node[], layouter: GraphLayouter, categories: GraphMap<number, number>, colors: d3.ScaleOrdinal<number, any>, onDrag: () => void) {
 
     const nodesGroup = this.nodesGroup = container.append('g')
         .attr('class', 'nodes')
@@ -57,11 +63,14 @@ class NodesView {
           node.pinned = !node.pinned
         });
 
+    const hasColors = layouter.config.get<boolean>('categoryColors');
+
     nodesGroup.each(function drawNode(node) {
       d3.select(this)
           .html(node.type.icon || `<circle r="${node.type.radius}"/>`)
         .append('circle')
           .attr('class', 'outline')
+          .each(hasColors? setColor : removeColor)
           .attr('r', node.type.radius);
       d3.select(this)
         .append('text')
@@ -69,6 +78,23 @@ class NodesView {
           .attr('transform', 'translate(10,20)')
           .text('x')
     });
+
+    layouter.config.onChange<boolean>(`categoryColors.viewNode${viewCount}`, hasColors => {
+      nodesGroup.select('.outline').each(hasColors? setColor : removeColor);
+    });
+
+    function setColor(node: Graph.Node) {
+      const category = categories.nodes[node.id];
+      if (typeof category !== 'undefined') {
+        this.style.stroke = colors(category);
+      } else {
+        this.style.stroke = '';
+      }
+    }
+
+    function removeColor() {
+      this.style.stroke = '';
+    }
   }
 
   /** Update the visualization of the nodes. */
@@ -88,15 +114,18 @@ class EdgesView {
    * Each edge will be represented by an element 'g.edge', which contains
    * the edge's path and label.
    */
-  constructor(container: D3Selection<{}>, edges: Graph.Edge[], arrowhead: Arrowhead) {
+  constructor(container: D3Selection<{}>, edges: Graph.Edge[], arrowhead: Arrowhead, config: Model, categories: GraphMap<number, number>, colors: d3.ScaleOrdinal<number, any>) {
     this.arrowhead = arrowhead;
+
+    const hasColors = config.get<boolean>('categoryColors');
 
     const edgesGroup = this.edgesGroup = container.append('g')
         .attr('class', 'edges')
       .selectAll('.edge')
         .data(edges)
       .enter().append('g')
-        .attr('class', 'edge');
+        .attr('class', 'edge')
+        .each(hasColors? setColor : removeColor);
 
     edgesGroup.append('path')
         .attr('class', '')
@@ -104,6 +133,28 @@ class EdgesView {
 
     edgesGroup.append('text')
         .text(edge => edge.type.name);
+
+    config.onChange<boolean>(`categoryColors.viewEdge${viewCount}`, hasColors => {
+      edgesGroup.each(hasColors? setColor : removeColor);
+    });
+
+
+    function setColor(edge: Graph.Edge) {
+      const category = categories.edges[edge.id];
+      if (typeof category !== 'undefined') {
+        const color = colors(category);
+        this.style.stroke = color;
+        this.style.fill = color;
+      } else {
+        this.style.stroke = '';
+        this.style.fill = '';
+      }
+    }
+
+    function removeColor() {
+      this.style.stroke = '';
+      this.style.fill = '';
+    }
   }
 
   refresh() {

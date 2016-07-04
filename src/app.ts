@@ -10,11 +10,13 @@ import {morphisms, graphs} from './examples';
 function controlConfig(config: GraphLayouter.Configuration, morphism: Model) {
   const configForm = d3.select('form[name="config"]');
 
+  Form.addDropdown(configForm, morphism, 'morphism', 'Rule', d3.keys(morphisms));
+
   Form.addCheckbox(configForm, config, 'layouterOn', 'Automatic Layout');
 
   Form.addCheckbox(configForm, config, 'autoCenter', 'Automatic Centering');
 
-  Form.addDropdown(configForm, morphism, 'morphism', 'Rule', d3.keys(morphisms));
+  Form.addCheckbox(configForm, config, 'categoryColors', 'Category Colors');
 
   Form.addSlider(configForm, config, 'gravityStrength', 'Gravity',
     d3.format('1.0e'),
@@ -81,11 +83,25 @@ const app = (<any>window).app = {
   currMorphism: morphisms.callRequest
 }
 
+function range(init: number, end: number): number[] {
+  const result: number[] = [];
+  for (let i = init; i < end; i++) {
+    result.push(i);
+  }
+  return result;
+}
+
 function showMorphism(morphism: Morphism, arrowhead: any, config: any) {
   app.currMorphism = morphism;
 
-  const layouter1 = GraphView.showGraph(d3.select('#graph1'), morphism.domain, morphism.mappingFromDomain, arrowhead, config, onDrag);
-  const layouter2 = GraphView.showGraph(d3.select('#graph2'), morphism.codomain, morphism.mappingFromCodomain, arrowhead, config, onDrag);
+  const scheme = morphism.numMappedElements <= 10 ? d3.schemeCategory10 : d3.schemeCategory20;
+
+  const colors = d3.scaleOrdinal<number,any>()
+    .domain(range(0, morphism.numMappedElements))
+    .range(scheme);
+
+  const layouter1 = GraphView.showGraph(d3.select('#graph1'), morphism.domain, morphism.mappingFromDomain, morphism.equivalenceClassFromDomain, colors, arrowhead, config, onDrag);
+  const layouter2 = GraphView.showGraph(d3.select('#graph2'), morphism.codomain, morphism.mappingFromCodomain, morphism.equivalenceClassFromCodomain, colors, arrowhead, config, onDrag);
 
   function onDrag() {
     layouter1.restart();

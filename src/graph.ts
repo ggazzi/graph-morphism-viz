@@ -219,16 +219,22 @@ interface Label {
   height: number;
 }
 
-export type GraphMapping = {
-  nodes: StringMap<Graph.Node>,
-  edges: StringMap<Graph.Edge>
+export interface GraphMap<N, E> {
+  nodes: StringMap<N>;
+  edges: StringMap<E>;
 };
+
+export type GraphMapping = GraphMap<Graph.Node, Graph.Edge>;
 
 export class Morphism {
   domain: Graph;
   codomain: Graph;
   mappingFromDomain: GraphMapping;
   mappingFromCodomain: GraphMapping;
+
+  numMappedElements: number;
+  equivalenceClassFromDomain: GraphMap<number, number>;
+  equivalenceClassFromCodomain: GraphMap<number, number>;
 
   private constructor(domain: Graph, codomain: Graph, mappingFromDomain: GraphMapping, mappingFromCodomain: GraphMapping) {
     this.domain = domain;
@@ -238,23 +244,30 @@ export class Morphism {
   }
 
   static assemble(domain: Graph, codomain: Graph, nodeMapping: [string, string][], edgeMapping: [number, number][]) {
-    const mappingFromDomain: GraphMapping = {nodes: {}, edges: {}};
-    const mappingFromCodomain: GraphMapping = {nodes: {}, edges: {}};
+    const result = new Morphism(domain, codomain, {nodes: {}, edges: {}}, {nodes: {}, edges: {}});
+    result.equivalenceClassFromDomain = {nodes: {}, edges: {}};
+    result.equivalenceClassFromCodomain = {nodes: {}, edges: {}};
+
+    let numEquivClasses = 0;
 
     for (const [n1, n2] of nodeMapping) {
-      mappingFromDomain.nodes[n1] = codomain.nodes[n2];
-      mappingFromCodomain.nodes[n2] = domain.nodes[n1];
+      result.mappingFromDomain.nodes[n1] = codomain.nodes[n2];
+      result.mappingFromCodomain.nodes[n2] = domain.nodes[n1];
+      result.equivalenceClassFromDomain.nodes[n1] = numEquivClasses;
+      result.equivalenceClassFromCodomain.nodes[n2] = numEquivClasses++;
     }
 
     const edgeMap: StringMap<Graph.Edge> = {};
     const revEdgeMap: StringMap<Graph.Edge> = {};
 
     for (const [e1, e2] of edgeMapping) {
-      mappingFromDomain.edges[e1] = codomain.edges[e2];
-      mappingFromCodomain.edges[e2] = domain.edges[e1];
+      result.mappingFromDomain.edges[e1] = codomain.edges[e2];
+      result.mappingFromCodomain.edges[e2] = domain.edges[e1];
+      result.equivalenceClassFromDomain.edges[e1] = numEquivClasses;
+      result.equivalenceClassFromCodomain.edges[e2] = numEquivClasses++;
     }
 
-    return new Morphism(domain, codomain, mappingFromDomain, mappingFromCodomain);
+    return result;
   }
 }
 
