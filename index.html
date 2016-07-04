@@ -7,12 +7,20 @@
 
   <title>Graph Morphism Visualization</title>
 
+  <link rel='stylesheet' type='text/css' href='http://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Mono&subset=latin'>
   <link rel="stylesheet" href="stylesheets/app.css">
   <link rel="stylesheet" href="stylesheets/graph.css">
   <link rel="stylesheet" href="stylesheets/form.css">
 </head>
 
 <body>
+<div id="main">
+
+  <header>
+    <h1>Graph Morphism Visualization</h1>
+  </header>
+
+  <section id="morphism">
   <svg id="canvas" width="1160" height="510">
     <g id="graph1" width="500" height="500" class="graph" transform="translate(5,5)">
       <rect width="500" height="500" class="graph__outline"/>
@@ -20,16 +28,17 @@
     <path transform="translate(520,250),scale(0.8,0.8)"
       d="M0,-25 L100,-25 L100,-50 L150,0 L100,50 L100,25 L0,25"
       stroke-width="3"
-      fill="darkgrey"
-      stroke="darkgrey"
+      fill="#454857"
+      stroke="#454857"
       />
     <g id="graph2" width="500" height="500" class="graph" transform="translate(655,5)">
       <rect width="500" height="500" class="graph__outline"/>
     </g>
   </svg>
+  </section>
 
   <section id="config">
-    <h1>Configuration</h1>
+    <h2>Configuration</h2>
     <form name="config"></form>
   </section>
 
@@ -44,6 +53,8 @@
   <script>
     app.run();
   </script>
+
+</div>
 </body>
 
 </html>

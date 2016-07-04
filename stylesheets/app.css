@@ -1,3 +1,65 @@
 body {
-	font-family: sans;
+  font-family: "Lato", sans;
+  color: #454857;
+
+  background-color: #E9E9E9;
+
+  height: 100%;
+  margin: 0;
+  padding: 0 10px;
+}
+
+#main {
+    background-color: #FBFAFB;
+    box-shadow: 3px 3px 5px 6px #ccc;
+
+		min-width: 1180px;
+		max-width: 1180px;
+
+    margin: 20px auto auto;
+    padding: 30px 10px;
+}
+
+#config {
+	margin-left: auto;
+	margin-right: auto;
+}
+
+#config h2 {
+	margin-left: 1em;
+	margin-right: 1em;
+	padding-left: 1em;
+	border-bottom: 1px dashed #BCBCBC;
+}
+
+h1 {
+    font-size: 1.7em;
+    margin-bottom: 0.5em;
+    font-weight: 600;
+}
+
+h2, h3, h4 {
+    margin-bottom: 0.5em;
+}
+
+header {
+    border-bottom: 1px dashed #BCBCBC;
+    padding: 0 1em;
+    margin-bottom: 1em;
+}
+
+header h1 {
+    text-align: right;
+}
+
+section {
+    max-width: 700px;
+
+    margin: 0 auto 1.6em 0;
+    padding: 0 1em;
+}
+
+section h2 {
+    font-weight: 600;
+    margin-bottom: 0;
 }

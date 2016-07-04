@@ -10,7 +10,7 @@ import {morphisms, graphs} from './examples';
 function controlConfig(config: GraphLayouter.Configuration, morphism: Model) {
   const configForm = d3.select('form[name="config"]');
 
-  Form.addDropdown(configForm, morphism, 'morphism', 'Rule', d3.keys(morphisms));
+  Form.addDropdown(configForm, morphism, 'morphism', 'Morphism', d3.keys(morphisms));
 
   Form.addCheckbox(configForm, config, 'layouterOn', 'Automatic Layout');
 

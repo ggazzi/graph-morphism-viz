@@ -1,13 +1,7 @@
-.graph {
-  border: 3px solid darkgrey;
-  border-radius: 10px;
-  padding: 10px;
-}
-
 .graph__outline {
   rx: 10;
   ry: 10;
-  stroke: darkgrey;
+  stroke: #454857;
   stroke-width: 3;
   fill: transparent;
   padding: 10px;
@@ -21,12 +15,12 @@
 
 .graph .node circle.outline {
   fill: transparent;
-  stroke: #ccc;
+  stroke: #CCC;
   stroke-width: 3;
 }
 
 .graph .node__category-label {
-  fill: #ccc;
+  fill: #9E9E9E;
 }
 
 .graph .node__pin-indicator {
@@ -41,12 +35,12 @@
 }
 
 .graph .edge {
-  fill: #CCC;
+  fill: #9E9E9E;
 }
 
 .graph .edge path {
   stroke-width: 2;
-  stroke: #CCC;
+  stroke: #9E9E9E;
 }
 
 .graph .edge text {
@@ -69,6 +63,6 @@
 }
 
 #arrowhead path {
-  fill: #CCC;
-  stroke: #CCC;
+  fill: #9E9E9E;
+  stroke: #9E9E9E;
 }
