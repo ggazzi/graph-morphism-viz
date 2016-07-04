@@ -100,6 +100,7 @@ export namespace GraphLayouter {
         autoCenter: false,
 
         categoryColors: true,
+        categoryLabels: false
       });
     }
   };

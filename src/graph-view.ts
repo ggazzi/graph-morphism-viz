@@ -74,14 +74,37 @@ class NodesView {
           .attr('r', node.type.radius);
       d3.select(this)
         .append('text')
+          .attr('class', 'node__category-label')
+          .attr('transform', 'translate(-40,5)')
+          .text(setLabel)
+          .each(hasColors? setColorText : removeColor)
+      d3.select(this)
+        .append('text')
           .attr('class', 'node__pin-indicator')
           .attr('transform', 'translate(10,20)')
           .text('x')
     });
 
     layouter.config.onChange<boolean>(`categoryColors.viewNode${viewCount}`, hasColors => {
-      nodesGroup.select('.outline').each(hasColors? setColor : removeColor);
+      nodesGroup.select('.outline')
+        .each(hasColors? setColor : removeColor);
+      nodesGroup.select('.node__category-label')
+        .each(hasColors? setColorText : removeColor);
     });
+
+    layouter.config.onChange<boolean>(`categoryLabels.viewNode${viewCount}`, hasColors => {
+      nodesGroup.select('.node__category-label')
+        .text(setLabel);
+    });
+
+    function setLabel(node: Graph.Node) {
+      const category = categories.nodes[node.id];
+      if (layouter.config.get<boolean>('categoryLabels') && typeof category !== 'undefined') {
+        return `${category}:`;
+      } else {
+        return '';
+      }
+    }
 
     function setColor(node: Graph.Node) {
       const category = categories.nodes[node.id];
@@ -91,9 +114,20 @@ class NodesView {
         this.style.stroke = '';
       }
     }
+    function setColorText(node: Graph.Node) {
+      const category = categories.nodes[node.id];
+      if (typeof category !== 'undefined') {
+        this.style.stroke = colors(category);
+        this.style.fill = colors(category);
+      } else {
+        this.style.stroke = '';
+        this.style.fill = '';
+      }
+    }
 
     function removeColor() {
       this.style.stroke = '';
+      this.style.fill = '';
     }
   }
 
@@ -132,12 +166,24 @@ class EdgesView {
         .attr('marker-end', `url('#${arrowhead.markerId}')`);
 
     edgesGroup.append('text')
-        .text(edge => edge.type.name);
+        .text(setLabel);
 
     config.onChange<boolean>(`categoryColors.viewEdge${viewCount}`, hasColors => {
       edgesGroup.each(hasColors? setColor : removeColor);
     });
 
+    config.onChange<boolean>(`categoryLabels.viewEdge${viewCount}`, () => {
+      edgesGroup.select('text').text(setLabel);
+    });
+
+    function setLabel(edge: Graph.Edge) {
+      const category = categories.edges[edge.id];
+      if (config.get<boolean>(`categoryLabels`) && typeof category !== 'undefined') {
+        return `${category}: ${edge.type.name}`;
+      } else {
+        return edge.type.name;
+      }
+    }
 
     function setColor(edge: Graph.Edge) {
       const category = categories.edges[edge.id];

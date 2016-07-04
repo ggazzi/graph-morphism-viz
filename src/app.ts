@@ -18,6 +18,8 @@ function controlConfig(config: GraphLayouter.Configuration, morphism: Model) {
 
   Form.addCheckbox(configForm, config, 'categoryColors', 'Category Colors');
 
+  Form.addCheckbox(configForm, config, 'categoryLabels', 'Category Labels');
+
   Form.addSlider(configForm, config, 'gravityStrength', 'Gravity',
     d3.format('1.0e'),
     d3.scaleLog()

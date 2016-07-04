@@ -25,6 +25,10 @@
   stroke-width: 3;
 }
 
+.graph .node__category-label {
+  fill: #ccc;
+}
+
 .graph .node__pin-indicator {
   stroke: transparent;
   fill: transparent;
