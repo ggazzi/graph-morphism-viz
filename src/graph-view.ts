@@ -240,9 +240,11 @@ class EdgesView {
   }
 
   private static updateLabelFromScreen(text: SVGLocatable, edge: Graph.Edge) {
-    const bbox = text.getBBox();
-    edge.labelSize.width = bbox.width;
-    edge.labelSize.height = bbox.height;
+    try {
+      const bbox = text.getBBox();
+      edge.labelSize.width = bbox.width;
+      edge.labelSize.height = bbox.height;
+    } catch (e) {}
   }
 }
 
