@@ -4,19 +4,19 @@ export const types = TypeGraph.assemble(
   [
     { name: 'up',
       radius: 20,
-      icon: img(40, 40, 'https://upload.wikimedia.org/wikipedia/commons/d/d5/Human-go-up.svg')
+      icon: img(40, 40, 'images/down.svg')
     },
     { name: 'down',
       radius: 20,
-      icon: img(40, 40, 'https://upload.wikimedia.org/wikipedia/commons/0/08/Human-go-down.svg')
+      icon: img(40, 40, 'images/up.svg')
     },
     { name: 'request',
       radius: 20,
-      icon: img(40, 40, 'https://upload.wikimedia.org/wikipedia/commons/2/29/Fxemoji_u2757.svg')
+      icon: img(40, 40, 'images/request.svg')
     },
     { name: 'elevator',
       radius: 20,
-      icon: img(40, 40, 'http://vignette3.wikia.nocookie.net/elevation/images/6/65/AIGA_Elevator.svg')
+      icon: img(40, 40, 'images/elevator.svg')
     },
     {
       name: 'floor',
